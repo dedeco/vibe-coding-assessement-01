@@ -1,0 +1,43 @@
+# Google Cloud Build configuration
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build', 
+      '-t', 'gcr.io/$PROJECT_ID/condominium-analytics:$BUILD_ID',
+      '-t', 'gcr.io/$PROJECT_ID/condominium-analytics:latest',
+      '.'
+    ]
+  
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/condominium-analytics:$BUILD_ID']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/condominium-analytics:latest']
+  
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'condominium-analytics'
+    - '--image=gcr.io/$PROJECT_ID/condominium-analytics:$BUILD_ID'
+    - '--region=us-central1'
+    - '--platform=managed'
+    - '--allow-unauthenticated'
+    - '--port=8000'
+    - '--memory=2Gi'
+    - '--cpu=2'
+    - '--timeout=900'
+    - '--concurrency=100'
+    - '--max-instances=10'
+    - '--set-env-vars=PORT=8000'
+
+images:
+  - 'gcr.io/$PROJECT_ID/condominium-analytics:$BUILD_ID'
+  - 'gcr.io/$PROJECT_ID/condominium-analytics:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
