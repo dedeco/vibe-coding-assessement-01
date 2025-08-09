@@ -67,7 +67,6 @@ service-account-key.json
 
 # Application specific
 data/chromadb/
-*.pdf
 processed/
 chunks/
 
