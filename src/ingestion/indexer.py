@@ -261,6 +261,40 @@ class ChromaDBIndexer:
         except Exception as e:
             print(f"Error testing search: {e}")
 
+class ExpenseIndexer(ChromaDBIndexer):
+    """Expense-specific indexer for testing."""
+    
+    def __init__(self, db_path: str = "data/chromadb"):
+        self.db_path = Path(db_path)
+        self.db_path.mkdir(parents=True, exist_ok=True)
+        
+        # Initialize ChromaDB client
+        self.client = chromadb.PersistentClient(path=str(self.db_path))
+        self.collection_name = "condominium_expenses"
+    
+    def get_collection(self) -> chromadb.Collection:
+        """Get the ChromaDB collection."""
+        try:
+            return self.client.get_collection(name=self.collection_name)
+        except ValueError:
+            raise ValueError(f"Collection '{self.collection_name}' not found. Run indexer first.")
+    
+    def add_chunk(self, content: str, metadata: Dict[str, Any]) -> None:
+        """Add a single chunk to the collection."""
+        collection = self.create_collection()
+        
+        # Generate unique ID
+        chunk_id = str(uuid.uuid4())
+        
+        try:
+            collection.add(
+                ids=[chunk_id],
+                documents=[content],
+                metadatas=[metadata]
+            )
+        except Exception as e:
+            print(f"Error adding chunk: {e}")
+
 def main():
     """Main function to run the indexer."""
     indexer = ChromaDBIndexer()

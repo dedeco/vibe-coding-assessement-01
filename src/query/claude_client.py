@@ -249,63 +249,11 @@ Please provide a clear, specific answer based on the data above. Include relevan
 def main():
     """Test the Claude client functionality."""
     
-    # Mock search results for testing
-    mock_results = {
-        'query': 'power supply expenses',
-        'total_results': 2,
-        'results': [
-            {
-                'rank': 1,
-                'content': 'Power supply expenses for March 2025: R$ 2,450.30 paid to CEMIG on 15/03/2025. Category: Utilities. Subcategory: Power Supply. Period: March 2025.',
-                'metadata': {
-                    'chunk_type': 'individual_expense',
-                    'category': 'utilities',
-                    'subcategory': 'power_supply',
-                    'amount': 2450.30,
-                    'vendor': 'CEMIG',
-                    'month_year': '2025-03'
-                },
-                'similarity_score': 0.95
-            },
-            {
-                'rank': 2,
-                'content': 'Utilities expenses for March 2025: R$ 5,230.50 total across 4 items. Breakdown: Power Supply: R$ 2,450.30, Water: R$ 1,200.20. Main vendors: CEMIG, SABESP.',
-                'metadata': {
-                    'chunk_type': 'category_summary',
-                    'category': 'utilities',
-                    'month_year': '2025-03',
-                    'total_amount': 5230.50,
-                    'expense_count': 4
-                },
-                'similarity_score': 0.87
-            }
-        ]
-    }
-    
-    try:
-        client = ClaudeExpenseAnalyst()
-        
-        # Test response generation
-        question = "How much was spent on power supply?"
-        result = client.analyze_expenses(question, mock_results)
-        
-        print("Claude Analysis Result:")
-        print(f"Question: {result['query']}")
-        print(f"Answer: {result['answer']}")
-        print(f"\nRelevant Data:")
-        print(f"- Categories: {result['relevant_data']['categories']}")
-        print(f"- Vendors: {result['relevant_data']['vendors']}")
-        print(f"- Months: {result['relevant_data']['months']}")
-        
-        # Test follow-up suggestions
-        suggestions = client.suggest_follow_up_questions(question, result)
-        print(f"\nSuggested follow-up questions:")
-        for i, suggestion in enumerate(suggestions, 1):
-            print(f"{i}. {suggestion}")
-            
-    except ValueError as e:
-        print(f"Error: {e}")
-        print("Please set your CLAUDE_API_KEY environment variable to test this module.")
+    print("Claude client test requires:")
+    print("1. CLAUDE_API_KEY environment variable to be set")
+    print("2. Test data in ChromaDB")
+    print("3. Use the main API endpoints for testing instead")
+    print("\nRun the test suite with: python scripts/test_api_responses.py")
 
 if __name__ == "__main__":
     main()

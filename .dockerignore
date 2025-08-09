@@ -34,7 +34,7 @@ Thumbs.db
 *.log
 
 # Deployment
-deploy.sh
+scripts/deploy.sh
 .dockerignore
 Dockerfile
 

@@ -9,7 +9,7 @@
 ### Option 1: Automated Setup (Recommended)
 ```bash
 # Run the setup script
-./setup.sh
+./scripts/setup.sh
 ```
 
 This will:
@@ -96,16 +96,17 @@ The project includes 6 trial balance PDFs from January-June 2025 for the PACTO c
 ```bash
 # Delete processed data to start fresh
 rm -rf data/
-./setup.sh
+./scripts/setup.sh
 ```
 
 ## 📁 Project Structure
 
 ```
 ├── README.md                    # Main documentation
-├── QUICKSTART.md               # This file
+├── docs/QUICKSTART.md          # This file
 ├── requirements.txt            # Python dependencies
-├── setup.sh                   # Automated setup script
+├── scripts/
+│   └── setup.sh                   # Automated setup script
 ├── .env.example              # Environment variables template
 ├── pdfs/                     # Trial balance PDF documents
 ├── data/                     # Processed data (created by pipeline)

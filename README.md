@@ -131,21 +131,37 @@ PDF Documents → Data Extraction → Semantic Chunking → Vector Embeddings �
 
 ```
 ├── README.md
+├── docs/                          # Documentation files
+│   ├── QUICKSTART.md             # Step-by-step setup guide
+│   ├── QUICK_START.md            # Fast POC setup
+│   ├── DEPLOYMENT.md             # Complete deployment guide
+│   ├── GCP_DEPLOYMENT.md         # Google Cloud deployment
+│   └── DEPLOY_DECISION.md        # Architecture decisions
+├── scripts/                       # Build and utility scripts
+│   ├── build_database.py         # Main database builder
+│   ├── populate_test_data.py     # Test data generator
+│   ├── test_api_responses.py     # API testing suite
+│   ├── build_and_run.sh          # Automated build script
+│   ├── deploy.sh                 # Deployment script
+│   └── setup.sh                  # Environment setup
 ├── pdfs/                          # Source trial balance documents
 ├── data/
 │   ├── processed/                 # Extracted and cleaned data
 │   ├── chromadb/                  # ChromaDB vector database files
 │   └── chunks/                    # Processed semantic chunks (backup)
 ├── src/
+│   ├── __init__.py               # Package initialization
 │   ├── ingestion/
+│   │   ├── __init__.py           # Ingestion package exports
 │   │   ├── pdf_processor.py       # PDF parsing and data extraction
 │   │   ├── semantic_chunker.py    # Create chunks with metadata
 │   │   └── indexer.py             # ChromaDB storage and indexing
 │   ├── query/
+│   │   ├── __init__.py           # Query package exports
 │   │   ├── retriever.py           # ChromaDB semantic search
-│   │   ├── claude_client.py       # Claude API integration
-│   │   └── response_generator.py  # Answer formatting
+│   │   └── claude_client.py       # Claude API integration
 │   └── web/
+│       ├── __init__.py           # Web package initialization
 │       ├── app.py                 # FastAPI backend
 │       └── static/
 │           ├── index.html         # Web interface
@@ -154,11 +170,29 @@ PDF Documents → Data Extraction → Semantic Chunking → Vector Embeddings �
 └── requirements.txt
 ```
 
+## Documentation
+
+Detailed documentation is available in the `docs/` folder:
+
+- **[Quick Start Guide](docs/QUICKSTART.md)** - Step-by-step setup instructions
+- **[Quick Setup Guide](docs/QUICK_START.md)** - Fast database population for POC
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Complete deployment strategies and data ingestion options
+- **[GCP Deployment](docs/GCP_DEPLOYMENT.md)** - Google Cloud Platform deployment guide
+- **[Deployment Decision](docs/DEPLOY_DECISION.md)** - Architecture and deployment strategy decisions
+
 ## Getting Started
 
 ### Prerequisites
 - Python 3.8+
 - Claude API key
+
+### Quick Setup (Recommended for POC)
+```bash
+# Use the build script for instant setup
+python scripts/build_database.py --source test --reset
+cd src/web && python app.py
+```
+For detailed setup instructions, see the [Quick Start Guide](docs/QUICKSTART.md).
 
 ### Installation & Setup
 ```bash

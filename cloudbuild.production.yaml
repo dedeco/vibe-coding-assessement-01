@@ -1,0 +1,48 @@
+# Google Cloud Build configuration for production PDF processing
+# Use this when you want to process real PDF files during build
+
+steps:
+  # Build the container image with PDF processing
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build', 
+      '-f', 'Dockerfile.production',
+      '-t', 'gcr.io/$PROJECT_ID/condominium-analytics-prod:$BUILD_ID',
+      '-t', 'gcr.io/$PROJECT_ID/condominium-analytics-prod:latest',
+      '.'
+    ]
+    timeout: '1800s'  # 30 minutes for PDF processing
+  
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/condominium-analytics-prod:$BUILD_ID']
+  
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/condominium-analytics-prod:latest']
+  
+  # Deploy to Cloud Run with higher resources for PDF processing
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+    - 'run'
+    - 'deploy'
+    - 'condominium-analytics-prod'
+    - '--image=gcr.io/$PROJECT_ID/condominium-analytics-prod:$BUILD_ID'
+    - '--region=us-central1'
+    - '--platform=managed'
+    - '--allow-unauthenticated'
+    - '--port=8000'
+    - '--memory=4Gi'          # More memory for PDF processing
+    - '--cpu=4'               # More CPU for processing
+    - '--timeout=900'
+    - '--concurrency=50'      # Lower concurrency for resource-heavy operations
+    - '--max-instances=5'     # Fewer instances due to higher resource usage
+    - '--set-env-vars=PORT=8000'
+
+images:
+  - 'gcr.io/$PROJECT_ID/condominium-analytics-prod:$BUILD_ID'
+  - 'gcr.io/$PROJECT_ID/condominium-analytics-prod:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'  # Higher CPU for build process

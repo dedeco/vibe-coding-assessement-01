@@ -12,9 +12,9 @@ import sys
 # Add parent directories to path to import our modules
 current_dir = Path(__file__).parent
 project_root = current_dir.parent.parent
-sys.path.append(str(project_root))
+sys.path.insert(0, str(project_root))
 
-from src.query.retriever import ExpenseRetriever
+from src.query import ExpenseRetriever
 from src.query.claude_client import ClaudeExpenseAnalyst
 
 # Initialize FastAPI app
