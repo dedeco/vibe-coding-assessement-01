@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # GCP Deployment Script for Condominium Analytics Agent
-# Project: andresousa-pso-upskiling
+# Project: andresousa-pso-upskilling
 
 set -e
 
 # Configuration
-PROJECT_ID="andresousa-pso-upskiling"
+PROJECT_ID="andresousa-pso-upskilling"
 SERVICE_NAME="condominium-analytics"
 REGION="us-central1"
 IMAGE_NAME="gcr.io/${PROJECT_ID}/${SERVICE_NAME}"
