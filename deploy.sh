@@ -22,57 +22,57 @@ echo -e "${GREEN}Starting deployment to GCP...${NC}"
 # Check if required tools are installed
 check_dependencies() {
     echo -e "${YELLOW}Checking dependencies...${NC}"
-    
+
     if ! command -v gcloud &> /dev/null; then
         echo -e "${RED}gcloud CLI is not installed. Please install it first.${NC}"
         exit 1
     fi
-    
+
     if ! command -v docker &> /dev/null; then
         echo -e "${RED}Docker is not installed. Please install it first.${NC}"
         exit 1
     fi
-    
+
     echo -e "${GREEN}Dependencies check passed.${NC}"
 }
 
 # Set up GCP project
 setup_gcp() {
     echo -e "${YELLOW}Setting up GCP project...${NC}"
-    
+
     # Set the project
     gcloud config set project ${PROJECT_ID}
-    
+
     # Enable required APIs
     echo -e "${YELLOW}Enabling required APIs...${NC}"
     gcloud services enable cloudbuild.googleapis.com
     gcloud services enable run.googleapis.com
     gcloud services enable containerregistry.googleapis.com
-    
+
     echo -e "${GREEN}GCP setup completed.${NC}"
 }
 
 # Build and push Docker image
 build_and_push() {
     echo -e "${YELLOW}Building Docker image...${NC}"
-    
+
     # Build the image
     docker build -t ${IMAGE_NAME} .
-    
+
     # Configure Docker to use gcloud as credential helper
     gcloud auth configure-docker
-    
+
     # Push to Google Container Registry
     echo -e "${YELLOW}Pushing image to GCR...${NC}"
     docker push ${IMAGE_NAME}
-    
+
     echo -e "${GREEN}Image built and pushed successfully.${NC}"
 }
 
 # Deploy to Cloud Run
 deploy_to_cloud_run() {
     echo -e "${YELLOW}Deploying to Cloud Run...${NC}"
-    
+
     gcloud run deploy ${SERVICE_NAME} \
         --image=${IMAGE_NAME} \
         --platform=managed \
@@ -84,12 +84,11 @@ deploy_to_cloud_run() {
         --timeout=900 \
         --concurrency=100 \
         --max-instances=10 \
-        --set-env-vars="PORT=8000" \
         --quiet
-    
+
     # Get the service URL
     SERVICE_URL=$(gcloud run services describe ${SERVICE_NAME} --region=${REGION} --format="value(status.url)")
-    
+
     echo -e "${GREEN}Deployment completed!${NC}"
     echo -e "${GREEN}Service URL: ${SERVICE_URL}${NC}"
     echo -e "${GREEN}Health check: ${SERVICE_URL}/health${NC}"
@@ -99,13 +98,13 @@ deploy_to_cloud_run() {
 # Set environment variables (optional)
 set_env_vars() {
     echo -e "${YELLOW}Setting environment variables...${NC}"
-    
+
     # Prompt for Claude API key if not set
     if [ -z "$CLAUDE_API_KEY" ]; then
         echo -e "${YELLOW}Enter your Claude API key (or press Enter to skip):${NC}"
         read -s CLAUDE_API_KEY
     fi
-    
+
     if [ ! -z "$CLAUDE_API_KEY" ]; then
         gcloud run services update ${SERVICE_NAME} \
             --region=${REGION} \
@@ -128,14 +127,14 @@ main() {
     echo -e "${GREEN}Service Name: ${SERVICE_NAME}${NC}"
     echo -e "${GREEN}Region: ${REGION}${NC}"
     echo ""
-    
+
     check_dependencies
     setup_gcp
     build_and_push
     deploy_to_cloud_run
     set_env_vars
     cleanup
-    
+
     echo -e "${GREEN}=== Deployment completed successfully! ===${NC}"
     echo -e "${YELLOW}Next steps:${NC}"
     echo -e "1. Visit the service URL to test the application"

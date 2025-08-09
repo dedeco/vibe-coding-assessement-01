@@ -18,8 +18,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the entire application
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p /app/data/chromadb /app/data/chunks /app/data/processed
+# Run the data ingestion pipeline to create the ChromaDB database.
+# This ensures the database is ready when the container starts.
+RUN python src/ingestion/pdf_processor.py
+RUN python src/ingestion/semantic_chunker.py
+RUN python src/ingestion/indexer.py
 
 # Set environment variables
 ENV PYTHONPATH=/app
