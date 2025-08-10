@@ -8,6 +8,7 @@ import uvicorn
 import os
 from pathlib import Path
 import sys
+from contextlib import asynccontextmanager
 
 # Add parent directories to path to import our modules
 current_dir = Path(__file__).parent
@@ -17,11 +18,43 @@ sys.path.insert(0, str(project_root))
 from src.query import ExpenseRetriever
 from src.query.claude_client import ClaudeExpenseAnalyst
 
+# Global components
+retriever = None
+claude_client = None
+conversation_history = []
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    global retriever, claude_client
+    
+    try:
+        # Initialize retriever
+        retriever = ExpenseRetriever()
+        print("✅ ExpenseRetriever initialized")
+        
+        # Initialize Claude client
+        claude_api_key = os.getenv('CLAUDE_API_KEY')
+        if claude_api_key:
+            claude_client = ClaudeExpenseAnalyst(claude_api_key)
+            print("✅ Claude client initialized")
+        else:
+            print("⚠️  CLAUDE_API_KEY not found. Claude functionality will be limited.")
+        
+    except Exception as e:
+        print(f"❌ Startup error: {e}")
+    
+    yield
+    
+    # Shutdown
+    print("Application shutdown.")
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Condominium Analytics Agent",
     description="Conversational analytics for condominium trial balance reports",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Add CORS middleware
@@ -37,11 +70,6 @@ app.add_middleware(
 static_path = current_dir / "static"
 static_path.mkdir(exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
-
-# Global components
-retriever = None
-claude_client = None
-conversation_history = []
 
 # Request/Response models
 class QueryRequest(BaseModel):
@@ -61,28 +89,6 @@ class HealthResponse(BaseModel):
     status: str
     components: Dict[str, str]
     message: str
-
-# Startup event
-@app.on_event("startup")
-async def startup_event():
-    """Initialize components on startup."""
-    global retriever, claude_client
-    
-    try:
-        # Initialize retriever
-        retriever = ExpenseRetriever()
-        print("✅ ExpenseRetriever initialized")
-        
-        # Initialize Claude client
-        claude_api_key = os.getenv('CLAUDE_API_KEY')
-        if claude_api_key:
-            claude_client = ClaudeExpenseAnalyst(claude_api_key)
-            print("✅ Claude client initialized")
-        else:
-            print("⚠️  CLAUDE_API_KEY not found. Claude functionality will be limited.")
-        
-    except Exception as e:
-        print(f"❌ Startup error: {e}")
 
 # Health check endpoint
 @app.get("/health", response_model=HealthResponse)
@@ -396,5 +402,6 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=port,
         reload=True,
-        log_level="info"
+        log_level="info",
+        reload_dirs=["src"]
     )
