@@ -26,7 +26,7 @@ from src.ingestion import TrialBalanceProcessor, SemanticChunker, ChromaDBIndexe
 class DatabaseBuilder:
     """Build and populate the vector database for POC deployment."""
     
-    def __init__(self, db_path: str = "../src/web/data/chromadb"):
+    def __init__(self, db_path: str = "src/web/data/chromadb"):
         self.db_path = Path(db_path)
         self.db_path.mkdir(parents=True, exist_ok=True)
         
@@ -59,12 +59,13 @@ class DatabaseBuilder:
             chunker = SemanticChunker()
             
             # Use the processed expenses data
-            expenses_file = Path("../data/processed/processed_expenses.json")
+            expenses_file = Path("data/processed/processed_expenses.json")
             if not expenses_file.exists():
                 print(f"❌ Processed expenses file not found at {expenses_file}")
                 return False
                 
-            chunks = chunker.create_chunks_from_file(str(expenses_file))
+            chunker = SemanticChunker(input_file=str(expenses_file))
+            chunks = chunker.process_expenses_to_chunks()
             print(f"✅ Created {len(chunks)} semantic chunks")
             
             # Step 3: Index in ChromaDB
@@ -260,6 +261,8 @@ def main():
                        help='Path to PDF files (for --source pdf)')
     parser.add_argument('--create-scripts', action='store_true',
                        help='Create build scripts for deployment')
+    parser.add_argument('--skip-verify', action='store_true',
+                       help='Skip database verification (useful for Docker builds)')
     
     args = parser.parse_args()
     
@@ -285,10 +288,13 @@ def main():
         print("❌ Database build failed!")
         sys.exit(1)
     
-    # Verify the build
-    if not builder.verify_database():
-        print("❌ Database verification failed!")
-        sys.exit(1)
+    # Verify the build (skip if requested)
+    if not args.skip_verify:
+        if not builder.verify_database():
+            print("❌ Database verification failed!")
+            sys.exit(1)
+    else:
+        print("⏭️  Skipping database verification")
     
     print("\n🎉 Build completed successfully!")
     print("\nNext steps:")

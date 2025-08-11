@@ -9,6 +9,19 @@ import os
 from pathlib import Path
 import sys
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Disable telemetry to prevent startup warnings
+os.environ['ANONYMIZED_TELEMETRY'] = 'false'
+os.environ['CHROMA_TELEMETRY'] = 'false'
+os.environ['CHROMADB_ANALYTICS'] = 'false'
+os.environ['POSTHOG_DISABLED'] = 'true'
+
+# Fix tokenizers parallelism warning
+os.environ['TOKENIZERS_PARALLELISM'] = 'false'
 
 # Add parent directories to path to import our modules
 current_dir = Path(__file__).parent
@@ -30,14 +43,19 @@ async def lifespan(app: FastAPI):
     
     try:
         # Initialize retriever
-        retriever = ExpenseRetriever()
+        retriever = ExpenseRetriever("src/web/data/chromadb")
         print("✅ ExpenseRetriever initialized")
         
         # Initialize Claude client
         claude_api_key = os.getenv('CLAUDE_API_KEY')
         if claude_api_key:
-            claude_client = ClaudeExpenseAnalyst(claude_api_key)
-            print("✅ Claude client initialized")
+            try:
+                claude_client = ClaudeExpenseAnalyst(claude_api_key)
+                print("✅ Claude client initialized")
+            except Exception as claude_error:
+                print(f"⚠️  Claude client initialization failed: {claude_error}")
+                print("⚠️  Claude functionality will be limited.")
+                claude_client = None
         else:
             print("⚠️  CLAUDE_API_KEY not found. Claude functionality will be limited.")
         
@@ -196,46 +214,29 @@ async def process_query(request: QueryRequest):
 def generate_simple_response(question: str, search_results: Dict[str, Any]) -> str:
     """Generate simple response without Claude API."""
     
+    # Check if search returned an error
+    if 'error' in search_results and search_results['total_results'] == 0:
+        error_response = f"I couldn't find any data matching your query. {search_results['error']}"
+        
+        # Add intelligent suggestions if available
+        if 'suggestions' in search_results and search_results['suggestions']:
+            error_response += "\n\nHere are some questions you could ask instead:"
+            for i, suggestion in enumerate(search_results['suggestions'], 1):
+                error_response += f"\n{i}. {suggestion}"
+        
+        # Add reformulated queries if available
+        if 'reformulated_queries' in search_results and search_results['reformulated_queries']:
+            error_response += "\n\nTry these similar questions with available data:"
+            for i, reformulated in enumerate(search_results['reformulated_queries'], 1):
+                error_response += f"\n• {reformulated}"
+        
+        return error_response
+    
     if not search_results.get('results'):
         return "I couldn't find any information related to your question in the trial balance data."
     
-    # Extract key information
-    total_amount = 0
-    items = []
-    
-    for result in search_results['results'][:5]:
-        content = result.get('content', '')
-        metadata = result.get('metadata', {})
-        
-        amount = metadata.get('amount', 0)
-        if amount:
-            total_amount += amount
-        
-        # Extract key details for response
-        items.append({
-            'content': content,
-            'amount': amount,
-            'category': metadata.get('category', ''),
-            'vendor': metadata.get('vendor', ''),
-            'month': metadata.get('month_year', '')
-        })
-    
-    # Build response
-    response_parts = []
-    
-    if question.lower().find('how much') != -1 or question.lower().find('total') != -1:
-        if total_amount > 0:
-            response_parts.append(f"Based on the trial balance data, I found expenses totaling R$ {total_amount:,.2f}.")
-        
-    response_parts.append(f"Here are the relevant details I found:")
-    
-    for i, item in enumerate(items[:3], 1):
-        response_parts.append(f"{i}. {item['content'][:200]}...")
-    
-    if len(search_results['results']) > 3:
-        response_parts.append(f"... and {len(search_results['results']) - 3} more items.")
-    
-    return "\n\n".join(response_parts)
+    # Use progressive disclosure formatting
+    return format_progressive_fallback_response(question, search_results)
 
 def extract_relevant_data(search_results: Dict[str, Any]) -> Dict[str, Any]:
     """Extract relevant data from search results."""
@@ -299,6 +300,113 @@ def generate_simple_suggestions(search_results: Dict[str, Any]) -> List[str]:
         ]
     
     return suggestions[:3]
+
+def format_progressive_fallback_response(question: str, search_results: Dict[str, Any]) -> str:
+    """Format fallback response using progressive disclosure."""
+    
+    results = search_results.get('results', [])
+    if not results:
+        return "I couldn't find any information related to your question in the trial balance data."
+    
+    # Extract expenses with amounts
+    expenses = []
+    total_amount = 0
+    
+    for result in results:
+        metadata = result.get('metadata', {})
+        content = result.get('content', '')
+        amount = metadata.get('amount', 0)
+        
+        if amount and amount > 0:
+            expenses.append({
+                'amount': float(amount),
+                'content': content,
+                'description': extract_clean_description(content),
+                'category': metadata.get('category', 'Other'),
+                'month': metadata.get('month_year', '')
+            })
+            total_amount += float(amount)
+        else:
+            # Include non-monetary items (summaries, etc.)
+            expenses.append({
+                'amount': 0,
+                'content': content,
+                'description': content[:100] + ('...' if len(content) > 100 else ''),
+                'category': metadata.get('category', 'Summary'),
+                'month': metadata.get('month_year', '')
+            })
+    
+    # Sort by amount (highest first)
+    expenses.sort(key=lambda x: x['amount'], reverse=True)
+    
+    # Build progressive response
+    lines = []
+    total_items = len(expenses)
+    
+    # Header
+    if total_amount > 0:
+        lines.append(f"# Found {total_items} results - R$ {total_amount:,.2f} total")
+    else:
+        lines.append(f"# Found {total_items} results")
+    
+    lines.append("")
+    
+    # Show top 3 items
+    show_initially = min(3, total_items)
+    remaining = total_items - show_initially
+    
+    lines.append(f"## ⚡ Top {show_initially} Results")
+    lines.append("")
+    
+    for i, expense in enumerate(expenses[:show_initially], 1):
+        if expense['amount'] > 0:
+            lines.append(f"{i}. **R$ {expense['amount']:,.2f}** — {expense['description']}")
+        else:
+            lines.append(f"{i}. {expense['description']}")
+    
+    # Progressive disclosure for remaining items
+    if remaining > 0:
+        lines.append("")
+        lines.append("<details>")
+        lines.append(f"<summary>📋 <strong>Show all {total_items} results</strong></summary>")
+        lines.append("")
+        
+        for i, expense in enumerate(expenses, 1):
+            if expense['amount'] > 0:
+                lines.append(f"{i}. **R$ {expense['amount']:,.2f}** — {expense['description']}")
+            else:
+                lines.append(f"{i}. {expense['description']}")
+        
+        lines.append("")
+        lines.append("</details>")
+    
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.append("💡 **Tip:** Try asking more specific questions about categories or time periods for better results.")
+    
+    return "\n".join(lines)
+
+def extract_clean_description(content: str) -> str:
+    """Extract clean description from content."""
+    import re
+    
+    # Remove "R$ X.XX" patterns
+    content = re.sub(r'R\$\s*[\d,]+\.?\d*', '', content)
+    # Remove "Period: YYYY-MM" patterns with more variations
+    content = re.sub(r'Period:\s*\d{4}-\d{2}', '', content)
+    content = re.sub(r'\.\s*Period:\s*[^.]*', '', content)
+    # Remove extra dots and dashes
+    content = re.sub(r'[.\-\s]+$', '', content)
+    content = re.sub(r'^[.\-\s]+', '', content)
+    # Clean up multiple spaces
+    content = re.sub(r'\s+', ' ', content)
+    
+    # Limit length
+    if len(content) > 70:
+        content = content[:67] + '...'
+    
+    return content.strip()
 
 # Get available filters
 @app.get("/filters")
@@ -403,5 +511,5 @@ if __name__ == "__main__":
         port=port,
         reload=True,
         log_level="info",
-        reload_dirs=["src"]
+        reload_dirs=["../../src"]
     )

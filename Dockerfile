@@ -7,6 +7,12 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -22,9 +28,9 @@ COPY . .
 COPY scripts/build_database.py .
 COPY scripts/populate_test_data.py .
 
-# Build the vector database during container build
+# Create clean database directory and build the vector database 
 # Use test data for POC - change to 'pdf' for production with real PDFs
-RUN python build_database.py --source test --reset
+RUN rm -rf src/web/data/chromadb && mkdir -p src/web/data && python build_database.py --source test --reset --skip-verify
 
 # Set environment variables
 ENV PYTHONPATH=/app

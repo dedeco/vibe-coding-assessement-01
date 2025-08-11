@@ -32,13 +32,26 @@ class CondominiumAnalytics {
         this.recentQuestionsEl = document.getElementById('recentQuestions');
         this.sidebarToggle = document.getElementById('sidebarToggle');
         this.sidebar = document.getElementById('sidebar');
+        
+        // Debug: Check if critical elements are found
+        if (!this.questionInput) {
+            console.error('Critical element not found: questionInput');
+        }
+        if (!this.recentQuestionsEl) {
+            console.warn('Recent questions element not found');
+        }
     }
     
     bindEvents() {
         // Input events
-        this.questionInput.addEventListener('input', () => this.updateCharCounter());
-        this.questionInput.addEventListener('keypress', (e) => this.handleKeyPress(e));
-        this.sendButton.addEventListener('click', () => this.sendQuestion());
+        if (this.questionInput) {
+            this.questionInput.addEventListener('input', () => this.updateCharCounter());
+            this.questionInput.addEventListener('keypress', (e) => this.handleKeyPress(e));
+        }
+        
+        if (this.sendButton) {
+            this.sendButton.addEventListener('click', () => this.sendQuestion());
+        }
         
         // Sidebar events
         if (this.sidebarToggle) {
@@ -50,12 +63,18 @@ class CondominiumAnalytics {
     }
     
     updateCharCounter() {
+        if (!this.questionInput || !this.charCounter) {
+            return;
+        }
+        
         const length = this.questionInput.value.length;
         this.charCounter.textContent = `${length}/500`;
         
         // Enable/disable send button
-        const hasContent = length > 0 && !this.isLoading;
-        this.sendButton.disabled = !hasContent;
+        if (this.sendButton) {
+            const hasContent = length > 0 && !this.isLoading;
+            this.sendButton.disabled = !hasContent;
+        }
         
         // Update character counter color
         if (length > 450) {
@@ -271,30 +290,43 @@ class CondominiumAnalytics {
     updateRecentQuestionsUI() {
         if (!this.recentQuestionsEl) return;
         
-        this.recentQuestionsEl.innerHTML = '';
-        
-        if (this.recentQuestions.length === 0) {
-            const emptyEl = document.createElement('div');
-            emptyEl.className = 'recent-question';
-            emptyEl.textContent = 'No recent questions';
-            emptyEl.style.opacity = '0.5';
-            this.recentQuestionsEl.appendChild(emptyEl);
-            return;
-        }
-        
-        this.recentQuestions.forEach(question => {
+        try {
+            this.recentQuestionsEl.innerHTML = '';
+            
+            if (this.recentQuestions.length === 0) {
+                const emptyEl = document.createElement('div');
+                emptyEl.className = 'recent-question';
+                emptyEl.textContent = 'No recent questions';
+                emptyEl.style.opacity = '0.5';
+                this.recentQuestionsEl.appendChild(emptyEl);
+                return;
+            }
+            
+            this.recentQuestions.forEach(question => {
             const questionEl = document.createElement('div');
             questionEl.className = 'recent-question';
             questionEl.textContent = question.length > 60 ? 
                 question.substring(0, 60) + '...' : question;
             questionEl.title = question;
             questionEl.addEventListener('click', () => {
-                this.questionInput.value = question;
-                this.updateCharCounter();
-                this.questionInput.focus();
+                try {
+                    if (!this.questionInput) {
+                        console.error('Question input element not found');
+                        return;
+                    }
+                    this.questionInput.value = question;
+                    this.updateCharCounter();
+                    this.questionInput.focus();
+                } catch (error) {
+                    console.error('Error handling recent question click:', error);
+                    this.showError('Failed to load recent question');
+                }
             });
             this.recentQuestionsEl.appendChild(questionEl);
         });
+        } catch (error) {
+            console.error('Error updating recent questions UI:', error);
+        }
     }
     
     loadRecentQuestions() {

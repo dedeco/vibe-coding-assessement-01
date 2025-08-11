@@ -632,3 +632,212 @@ body {
         padding: 1rem;
     }
 }
+
+/* Progressive Disclosure Styles */
+.message-content h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.message-content h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 1.5rem 0 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.message-content h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin: 1rem 0 0.5rem 0;
+}
+
+.message-content details {
+    margin: 1rem 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+}
+
+.message-content details summary {
+    background: var(--surface-2);
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    user-select: none;
+}
+
+.message-content details summary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.message-content details summary::marker {
+    display: none;
+}
+
+.message-content details summary::before {
+    content: '▶';
+    font-size: 0.75rem;
+    transition: transform 0.2s;
+    margin-right: 0.25rem;
+}
+
+.message-content details[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.message-content details[open] summary {
+    border-bottom: 1px solid var(--border);
+}
+
+.message-content details > div:not(:first-child) {
+    padding: 1rem;
+}
+
+/* Expense List Items */
+.message-content ol, .message-content ul {
+    margin: 0.75rem 0;
+    padding-left: 1.5rem;
+}
+
+.message-content li {
+    margin: 0.5rem 0;
+    line-height: 1.4;
+}
+
+.message-content li strong {
+    color: var(--success-color);
+    font-weight: 600;
+}
+
+/* Links and Actions */
+.message-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.message-content a:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
+/* Dividers */
+.message-content hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.5rem 0;
+}
+
+/* Code and Preformatted Text */
+.message-content code {
+    background: var(--surface-2);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.message-content pre {
+    background: var(--surface-2);
+    padding: 1rem;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    border: 1px solid var(--border);
+}
+
+/* Enhanced Table Styles */
+.message-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    background: var(--surface);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.message-content th,
+.message-content td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.message-content th {
+    background: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.message-content tr:last-child td {
+    border-bottom: none;
+}
+
+.message-content tr:hover {
+    background: var(--surface-2);
+}
+
+/* Blockquotes and Callouts */
+.message-content blockquote {
+    border-left: 4px solid var(--primary-color);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Tip/Info Boxes */
+.message-content p:has(strong):has-text('💡') {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    margin: 1rem 0;
+    border-left: 4px solid var(--warning-color);
+}
+
+/* Expense Amount Highlighting */
+.expense-amount {
+    background: linear-gradient(135deg, var(--success-color), #10b981);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Progressive Disclosure Animation */
+.message-content details .expanding-content {
+    animation: expandIn 0.3s ease-out;
+}
+
+@keyframes expandIn {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 500px;
+    }
+}

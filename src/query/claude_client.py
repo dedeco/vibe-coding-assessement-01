@@ -11,36 +11,51 @@ class ClaudeExpenseAnalyst:
         if not self.api_key:
             raise ValueError("Claude API key not found. Set CLAUDE_API_KEY environment variable.")
         
-        self.client = anthropic.Anthropic(api_key=self.api_key)
-        self.model = "claude-3-sonnet-20240229"
+        try:
+            # Initialize client with minimal configuration
+            self.client = anthropic.Anthropic(api_key=self.api_key)
+            self.model = "claude-3-5-sonnet-20241022"
+        except Exception as e:
+            raise ValueError(f"Failed to initialize Claude client: {str(e)}")
         
     def create_system_prompt(self) -> str:
         """Create system prompt for the expense analysis assistant."""
-        return """You are an intelligent assistant helping condominium associates analyze their monthly trial balance reports. 
+        return """You are an expert financial analyst specialized in condominium expense analysis. You provide confident, assertive answers based on trial balance data.
 
-You have access to processed financial data from trial balance documents, including:
-- Individual expense items with amounts, vendors, categories, and dates
+AVAILABLE DATA:
+- Individual expense items with precise amounts, vendors, categories, and dates
 - Monthly summaries and category breakdowns
 - Vendor payment histories
 - Expense categorizations (utilities, maintenance, services, supplies)
 
-Your role is to:
-1. Answer questions about expenses clearly and accurately
-2. Provide specific amounts when asked
-3. Explain expense categories and patterns
-4. Compare expenses across months when relevant
-5. Highlight important financial insights
+YOUR EXPERTISE:
+1. Provide confident, definitive answers when data is available
+2. Give specific amounts in Brazilian Reais (R$) with precise formatting
+3. Explain expense patterns and identify trends
+4. Make direct comparisons and provide context
+5. Highlight important financial insights proactively
 
-Guidelines:
-- Always provide specific amounts in Brazilian Reais (R$) when available
-- Be precise with dates and vendor names
-- Explain technical terms in simple language
-- If data is missing or unclear, acknowledge this
-- Suggest follow-up questions that might be helpful
-- Keep responses concise but informative
-- Use Portuguese or English based on the user's question language
+RESPONSE STYLE:
+- Be assertive and confident: "The expenses were R$ X" not "It appears the expenses might be"
+- START WITH THE TOTAL AMOUNT ONLY - be concise and direct
+- For utility/expense questions, provide just the final total amount
+- Use strong, definitive language when data supports it
+- Present the main number prominently and clearly
+- Avoid lengthy explanations unless specifically asked for details
 
-Remember: You're helping condominium associates understand their financial contributions and verify expense allocations."""
+FORMATTING:
+- Lead with just the key total: "R$ 2,865.00" or "R$ 2,865.00 total utilities in January 2025"
+- Keep responses to 1-2 sentences maximum for simple total questions  
+- Only provide breakdowns if explicitly requested
+- Bold the main amount
+
+LANGUAGE:
+- Use Portuguese or English based on the user's question
+- Be direct and professional
+- Avoid hedging language ("seems", "appears", "might be")
+- State facts confidently based on the provided data
+
+Remember: You're the expert. The associates trust your analysis to make informed financial decisions."""
 
     def format_context_from_results(self, results: Dict[str, Any]) -> str:
         """Format search results into context for Claude."""
@@ -90,14 +105,20 @@ Remember: You're helping condominium associates understand their financial contr
                 })
         
         # Add current query with context
-        user_message = f"""Based on the following financial data from the condominium trial balance, please answer my question:
-
-FINANCIAL DATA:
-{context}
+        user_message = f"""CONDOMINIUM FINANCIAL ANALYSIS REQUEST
 
 QUESTION: {user_question}
 
-Please provide a clear, specific answer based on the data above. Include relevant amounts, dates, and vendor information when available."""
+AVAILABLE FINANCIAL DATA:
+{context}
+
+INSTRUCTIONS:
+- Provide a confident, definitive answer based on the data
+- START WITH THE TOTAL AMOUNT IMMEDIATELY - lead with the main number
+- For simple cost questions, provide just the total amount in R$ format
+- Keep responses concise (1-2 sentences) unless breakdown is specifically requested
+- Only provide detailed breakdowns if user asks for "details", "breakdown", or "show me all"
+- Be direct and assertive - give the number first, context second"""
 
         messages.append({
             "role": "user",
@@ -122,6 +143,37 @@ Please provide a clear, specific answer based on the data above. Include relevan
                         user_question: str, 
                         search_results: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze expenses and return structured response."""
+        
+        # Check if search returned an error
+        if 'error' in search_results and search_results['total_results'] == 0:
+            error_response = f"I couldn't find any data matching your query. {search_results['error']}"
+            
+            # Add intelligent suggestions if available
+            if 'suggestions' in search_results and search_results['suggestions']:
+                error_response += "\n\nHere are some questions you could ask instead:"
+                for i, suggestion in enumerate(search_results['suggestions'], 1):
+                    error_response += f"\n{i}. {suggestion}"
+            
+            # Add reformulated queries if available
+            if 'reformulated_queries' in search_results and search_results['reformulated_queries']:
+                error_response += "\n\nTry these similar questions with available data:"
+                for i, reformulated in enumerate(search_results['reformulated_queries'], 1):
+                    error_response += f"\n• {reformulated}"
+            
+            return {
+                'answer': error_response,
+                'query': user_question,
+                'total_results_found': 0,
+                'relevant_data': {
+                    'amounts': [],
+                    'vendors': [],
+                    'categories': [],
+                    'months': []
+                },
+                'raw_results': [],
+                'suggestions': search_results.get('suggestions', []),
+                'reformulated_queries': search_results.get('reformulated_queries', [])
+            }
         
         # Generate natural language response
         response_text = self.generate_response(user_question, search_results)
@@ -152,8 +204,18 @@ Please provide a clear, specific answer based on the data above. Include relevan
             if metadata.get('month_year'):
                 relevant_months.add(metadata['month_year'])
         
+        # Check if user wants detailed breakdown
+        wants_details = any(keyword in user_question.lower() for keyword in ['breakdown', 'details', 'show me all', 'list all', 'show all'])
+        
+        # Format response - simple for totals, detailed for breakdowns
+        if wants_details:
+            formatted_answer = self._format_progressive_response(user_question, search_results, response_text)
+        else:
+            # Return concise response for simple total questions
+            formatted_answer = response_text
+        
         return {
-            'answer': response_text,
+            'answer': formatted_answer,
             'query': user_question,
             'total_results_found': search_results.get('total_results', 0),
             'relevant_data': {
@@ -200,6 +262,203 @@ Please provide a clear, specific answer based on the data above. Include relevan
             ]
         
         return suggestions[:3]  # Return max 3 suggestions
+    
+    def _format_progressive_response(self, user_question: str, search_results: Dict[str, Any], claude_response: str) -> str:
+        """Format response using progressive disclosure pattern."""
+        
+        results = search_results.get('results', [])
+        if not results:
+            return claude_response
+        
+        # Extract expenses with amounts
+        expenses = []
+        summary_info = None
+        
+        for result in results:
+            metadata = result.get('metadata', {})
+            content = result.get('content', '')
+            
+            # Check if this is a summary
+            if 'monthly summary' in content.lower() or 'total expenses' in content.lower():
+                summary_info = {
+                    'content': content,
+                    'metadata': metadata
+                }
+                continue
+            
+            # Extract individual expenses
+            amount = metadata.get('amount')
+            if amount and amount > 0:
+                expenses.append({
+                    'amount': float(amount),
+                    'content': content,
+                    'metadata': metadata,
+                    'description': self._extract_description(content),
+                    'category': metadata.get('category', 'Other'),
+                    'vendor': metadata.get('vendor', ''),
+                    'month': metadata.get('month_year', '')
+                })
+        
+        # Sort expenses by amount (highest first)
+        expenses.sort(key=lambda x: x['amount'], reverse=True)
+        
+        if not expenses and not summary_info:
+            return claude_response
+        
+        return self._build_progressive_markdown(user_question, expenses, summary_info, claude_response)
+    
+    def _extract_description(self, content: str) -> str:
+        """Extract clean description from content."""
+        # Remove amount and period info for cleaner display
+        import re
+        
+        # Remove "R$ X.XX" patterns
+        content = re.sub(r'R\$\s*[\d,]+\.?\d*', '', content)
+        # Remove "Period: YYYY-MM" patterns with more variations
+        content = re.sub(r'Period:\s*\d{4}-\d{2}', '', content)
+        content = re.sub(r'\.\s*Period:\s*[^.]*', '', content)
+        # Remove extra dots and dashes
+        content = re.sub(r'[.\-\s]+$', '', content)
+        content = re.sub(r'^[.\-\s]+', '', content)
+        # Clean up multiple spaces
+        content = re.sub(r'\s+', ' ', content)
+        
+        # Limit length
+        if len(content) > 70:
+            content = content[:67] + '...'
+        
+        return content.strip()
+    
+    def _build_progressive_markdown(self, question: str, expenses: List[Dict], summary_info: Dict, claude_response: str) -> str:
+        """Build progressive disclosure markdown response."""
+        
+        if not expenses:
+            return claude_response
+        
+        # Determine how many to show initially (top 3 or top 5 based on total)
+        total_items = len(expenses)
+        if total_items <= 3:
+            show_initially = total_items
+            show_more = 0
+        elif total_items <= 6:
+            show_initially = 3
+            show_more = total_items - 3
+        else:
+            show_initially = 4
+            show_more = total_items - 4
+        
+        # Extract month/period info
+        period_info = ""
+        if expenses and expenses[0].get('month'):
+            month_code = expenses[0]['month']
+            try:
+                year, month = month_code.split('-')
+                month_names = {
+                    '01': 'January', '02': 'February', '03': 'March', '04': 'April',
+                    '05': 'May', '06': 'June', '07': 'July', '08': 'August',
+                    '09': 'September', '10': 'October', '11': 'November', '12': 'December'
+                }
+                period_info = f"{month_names.get(month, month)} {year}"
+            except:
+                period_info = month_code
+        
+        # Calculate totals
+        total_amount = sum(expense['amount'] for expense in expenses)
+        shown_amount = sum(expense['amount'] for expense in expenses[:show_initially])
+        hidden_amount = total_amount - shown_amount
+        
+        # Build response
+        lines = []
+        
+        # Header with key info
+        if period_info:
+            lines.append(f"# {period_info}: R$ {total_amount:,.2f} Total Expenses")
+        else:
+            lines.append(f"# Expenses: R$ {total_amount:,.2f} Total")
+        
+        lines.append("")
+        
+        # Quick summary
+        if total_items > 1:
+            avg_amount = total_amount / total_items
+            lines.append(f"## ⚡ Quick View (Top {show_initially})")
+            lines.append(f"**{total_items} items** • **Average:** R$ {avg_amount:,.2f}")
+            lines.append("")
+        else:
+            lines.append("## 💰 Expense Details")
+            lines.append("")
+        
+        # Show top items
+        for i, expense in enumerate(expenses[:show_initially], 1):
+            amount_str = f"R$ {expense['amount']:,.2f}"
+            description = expense['description']
+            
+            # Add emphasis for high-value items (top 2)
+            if i <= 2 and total_items > 2:
+                lines.append(f"{i}. **{amount_str}** — {description}")
+            else:
+                lines.append(f"{i}. **{amount_str}** — {description}")
+        
+        # Progressive disclosure section
+        if show_more > 0:
+            lines.append("")
+            lines.append("<details>")
+            lines.append(f"<summary>📋 <strong>Show all {total_items} items</strong> (+ R$ {hidden_amount:,.2f} more)</summary>")
+            lines.append("")
+            lines.append("### Complete List")
+            
+            # Show all items
+            for i, expense in enumerate(expenses, 1):
+                amount_str = f"R$ {expense['amount']:,.2f}"
+                description = expense['description']
+                lines.append(f"{i}. **{amount_str}** — {description}")
+            
+            # Add breakdown by category if multiple categories
+            categories = {}
+            for expense in expenses:
+                cat = expense.get('category', 'Other')
+                if cat not in categories:
+                    categories[cat] = {'count': 0, 'total': 0}
+                categories[cat]['count'] += 1
+                categories[cat]['total'] += expense['amount']
+            
+            if len(categories) > 1:
+                lines.append("")
+                lines.append("### 📊 By Category")
+                for cat, data in sorted(categories.items(), key=lambda x: x[1]['total'], reverse=True):
+                    lines.append(f"- **{cat}:** {data['count']} items — R$ {data['total']:,.2f}")
+            
+            # Add value breakdown
+            if total_items > 3:
+                high_value = [e for e in expenses if e['amount'] > 500]
+                low_value = [e for e in expenses if e['amount'] <= 500]
+                
+                if high_value and low_value:
+                    lines.append("")
+                    lines.append("### 💰 By Value Range")
+                    lines.append(f"- **High (>R$ 500):** {len(high_value)} items — R$ {sum(e['amount'] for e in high_value):,.2f}")
+                    lines.append(f"- **Standard (≤R$ 500):** {len(low_value)} items — R$ {sum(e['amount'] for e in low_value):,.2f}")
+            
+            lines.append("")
+            lines.append("</details>")
+        
+        lines.append("")
+        lines.append("---")
+        lines.append("")
+        
+        # Add related questions based on data
+        lines.append("## 🎯 Related Questions")
+        if period_info:
+            lines.append(f"- [Compare with other months](#)")
+            lines.append(f"- [Show {period_info.split()[0]} trends](#)")
+        
+        if len(set(e.get('category') for e in expenses)) == 1:
+            cat = expenses[0].get('category', 'Other')
+            lines.append(f"- [Other {cat.lower()} expenses](#)")
+        
+        lines.append("- [Highest expenses across all months](#)")
+        
+        return "\n".join(lines)
     
     def create_expense_summary(self, search_results: Dict[str, Any]) -> Dict[str, Any]:
         """Create a structured summary of expenses from search results."""
