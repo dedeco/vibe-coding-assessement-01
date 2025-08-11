@@ -238,12 +238,18 @@ class ExpenseRetriever:
         # Get available data to validate query against existing content
         available_filters = self.get_available_filters()
         
-        # Extract potential month references
+        # Extract potential month references - now with dynamic year detection
+        import re
+        
+        # Extract year from query (default to 2025 if not specified)
+        year_match = re.search(r'\b(20\d{2})\b', query)
+        target_year = year_match.group(1) if year_match else '2025'
+        
         month_mapping = {
-            'january': '2024-01', 'february': '2024-02', 'march': '2024-03',
-            'april': '2024-04', 'may': '2024-05', 'june': '2024-06',
-            'july': '2024-07', 'august': '2024-08', 'september': '2024-09',
-            'october': '2024-10', 'november': '2024-11', 'december': '2024-12'
+            'january': f'{target_year}-01', 'february': f'{target_year}-02', 'march': f'{target_year}-03',
+            'april': f'{target_year}-04', 'may': f'{target_year}-05', 'june': f'{target_year}-06',
+            'july': f'{target_year}-07', 'august': f'{target_year}-08', 'september': f'{target_year}-09',
+            'october': f'{target_year}-10', 'november': f'{target_year}-11', 'december': f'{target_year}-12'
         }
         
         requested_month = None
@@ -397,11 +403,17 @@ class ExpenseRetriever:
         # Extract month context if present
         query_lower = original_query.lower()
         month_context = ""
+        
+        # Extract year from query (default to 2025 if not specified)
+        import re
+        year_match = re.search(r'\b(20\d{2})\b', original_query)
+        target_year = year_match.group(1) if year_match else '2025'
+        
         month_mapping = {
-            'january': '2024-01', 'february': '2024-02', 'march': '2024-03',
-            'april': '2024-04', 'may': '2024-05', 'june': '2024-06',
-            'july': '2024-07', 'august': '2024-08', 'september': '2024-09',
-            'october': '2024-10', 'november': '2024-11', 'december': '2024-12'
+            'january': f'{target_year}-01', 'february': f'{target_year}-02', 'march': f'{target_year}-03',
+            'april': f'{target_year}-04', 'may': f'{target_year}-05', 'june': f'{target_year}-06',
+            'july': f'{target_year}-07', 'august': f'{target_year}-08', 'september': f'{target_year}-09',
+            'october': f'{target_year}-10', 'november': f'{target_year}-11', 'december': f'{target_year}-12'
         }
         
         for month_name, month_code in month_mapping.items():
