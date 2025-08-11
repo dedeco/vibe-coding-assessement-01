@@ -28,9 +28,14 @@ COPY . .
 COPY scripts/build_database.py .
 COPY scripts/populate_test_data.py .
 
-# Create clean database directory and build the vector database 
-# Use test data for POC - change to 'pdf' for production with real PDFs
-RUN rm -rf src/web/data/chromadb && mkdir -p src/web/data && python build_database.py --source test --reset --skip-verify
+# Copy PDFs into container for real data processing
+COPY pdfs/ ./pdfs/
+
+# Install additional system dependencies for PDF processing
+RUN apt-get update && apt-get install -y poppler-utils && rm -rf /var/lib/apt/lists/*
+
+# Create clean database directory and build the vector database from real PDFs
+RUN rm -rf src/web/data/chromadb && mkdir -p src/web/data && python build_database.py --source pdf --reset --skip-verify
 
 # Set environment variables
 ENV PYTHONPATH=/app
