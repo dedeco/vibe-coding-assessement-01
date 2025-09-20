@@ -63,42 +63,42 @@ PHASE 2: USER INTERACTION (Real-time)
 ## Before vs After Comparison
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    BEFORE vs AFTER                         │
-├─────────────────────────────────────────────────────────────┤
-│ BEFORE: Manual Process                                      │
-│ ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐        │
-│ │ Question│─▶│ Find PDF│─▶│ Read    │─▶│ Calculate│        │
-│ │ about   │  │ files   │  │ through │  │ manually │        │
-│ │ expenses│  │ manually│  │ pages   │  │          │        │
-│ └─────────┘  └─────────┘  └─────────┘  └─────────┘        │
-│                    Time: 10-30 minutes                     │
-├─────────────────────────────────────────────────────────────┤
-│ AFTER: Condominium Analytics                               │
-│ ┌─────────┐                            ┌─────────┐        │
-│ │ Type    │─────────────────────────────▶│ Get     │        │
-│ │ question│         AI handles           │ instant │        │
-│ │ in chat │         everything           │ answer  │        │
-│ └─────────┘                            └─────────┘        │
-│                    Time: 5 seconds                        │
-└─────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│                    BEFORE vs AFTER                        │
+├────────────────────────────────────────────────────────────┤
+│ BEFORE: Manual Process                                     │
+│ ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐           │
+│ │Question│─▶│Find PDF│─▶│Read    │─▶│Calculate│           │
+│ │about   │  │files   │  │through │  │manually │           │
+│ │expenses│  │manually│  │pages   │  │         │           │
+│ └────────┘  └────────┘  └────────┘  └────────┘           │
+│                  Time: 10-30 minutes                      │
+├────────────────────────────────────────────────────────────┤
+│ AFTER: Condominium Analytics                              │
+│ ┌────────┐                        ┌────────┐             │
+│ │Type    │───────────────────────▶│Get     │             │
+│ │question│    AI handles          │instant │             │
+│ │in chat │    everything          │answer  │             │
+│ └────────┘                        └────────┘             │
+│                  Time: 5 seconds                         │
+└────────────────────────────────────────────────────────────┘
 ```
 
 ## Benefits Comparison
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                     TRADITIONAL vs SMART                       │
-├────────────────────────────────────────────────────────────────┤
-│ TRADITIONAL METHOD          │  CONDOMINIUM ANALYTICS            │
-│                            │                                   │
-│ • Search through files     │  • Ask in plain language         │
-│ • Read multiple pages      │  • AI finds exact information    │
-│ • Manual calculations      │  • Instant calculations          │
-│ • 15-30 minutes           │  • 5 seconds                     │
-│ • Prone to errors         │  • Accurate results              │
-│ • Need computer access     │  • Works on any device           │
-└────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                   TRADITIONAL vs SMART                     │
+├─────────────────────────────────────────────────────────────┤
+│ TRADITIONAL METHOD        │  CONDOMINIUM ANALYTICS          │
+│                          │                                 │
+│ • Search through files   │  • Ask in plain language       │
+│ • Read multiple pages    │  • AI finds exact info         │
+│ • Manual calculations    │  • Instant calculations        │
+│ • 15-30 minutes         │  • 5 seconds                   │
+│ • Prone to errors       │  • Accurate results            │
+│ • Need computer access   │  • Works on any device         │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Real Example Walkthrough
