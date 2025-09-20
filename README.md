@@ -179,6 +179,7 @@ Detailed documentation is available in the `docs/` folder:
 - **[Deployment Guide](docs/DEPLOYMENT.md)** - Complete deployment strategies and data ingestion options
 - **[GCP Deployment](docs/GCP_DEPLOYMENT.md)** - Google Cloud Platform deployment guide
 - **[Deployment Decision](docs/DEPLOY_DECISION.md)** - Architecture and deployment strategy decisions
+- **[System Diagrams](docs/DIAGRAMS.md)** - Visual diagrams and flowcharts explaining the application
 
 ## Getting Started
 
