@@ -187,30 +187,6 @@ Title: "Condominium Analytics - Technical Architecture"
 └────────────────────────────────────────────────────────────────────┘
 ```
 
-## For Visual Tools
-
-### Color Scheme Suggestions
-- **PDF/Input:** Light Blue (#E3F2FD)
-- **Processing:** Green (#E8F5E8)
-- **Storage:** Orange (#FFF3E0)
-- **User Interface:** Purple (#F3E5F5)
-- **Results:** Dark Blue (#1976D2)
-
-### Recommended Tools
-- **Miro** - For collaborative diagrams
-- **Lucidchart** - For flowcharts
-- **Canva** - For presentations
-- **Draw.io** - Free online tool
-- **PowerPoint/Google Slides** - For presentations
-
-## Usage by Audience
-
-- **Simple flows** - For executives and stakeholders
-- **Technical diagrams** - For developers and IT teams
-- **Before/after comparisons** - For decision makers
-- **Step-by-step examples** - For end users and training
-- **Architecture components** - For technical documentation
-
 ---
 
 **Live Application:** [https://condominium-analytics-xxztp26via-uc.a.run.app/](https://condominium-analytics-xxztp26via-uc.a.run.app/)
