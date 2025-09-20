@@ -21,13 +21,13 @@ This document contains visual diagrams to help explain the Condominium Analytics
 Step 1: SETUP (Behind the scenes)
 ┌─────────────────────────────────────────────────────────────┐
 │ PDF Documents → AI Processing → Smart Database Creation     │
-│ (Trial Balance)   (Understands)   (603 Documents Ready)    │
+│ (Trial Balance)   (Understands)   (603 Documents Ready)     │
 └─────────────────────────────────────────────────────────────┘
 
 Step 2: USER INTERACTION (What you see)
 ┌─────────────────────────────────────────────────────────────┐
-│ Type Question → AI Understands → Smart Search → Get Answer │
-│ "Power costs?"   (Natural Lang.)   (Find relevant)  (Real) │
+│ Type Question → AI Understands → Smart Search → Get Answer  │
+│ "Power costs?"   (Natural Lang.)   (Find relevant)  (Real)  │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -64,23 +64,23 @@ PHASE 2: USER INTERACTION (Real-time)
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│                    BEFORE vs AFTER                        │
+│                    BEFORE vs AFTER                         │
 ├────────────────────────────────────────────────────────────┤
 │ BEFORE: Manual Process                                     │
-│ ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐           │
-│ │Question│─▶│Find PDF│─▶│Read    │─▶│Calculate│           │
-│ │about   │  │files   │  │through │  │manually │           │
-│ │expenses│  │manually│  │pages   │  │         │           │
-│ └────────┘  └────────┘  └────────┘  └────────┘           │
-│                  Time: 10-30 minutes                      │
+│ ┌────────┐  ┌────────┐  ┌────────┐  ┌────────┐             │
+│ │Question│─▶│Find PDF│─▶│Read    │─▶│Calculate│            │
+│ │about   │  │files   │  │through │  │manually │            │
+│ │expenses│  │manually│  │pages   │  │         │            │
+│ └────────┘  └────────┘  └────────┘  └────────┘             │
+│                  Time: 10-30 minutes                       │
 ├────────────────────────────────────────────────────────────┤
-│ AFTER: Condominium Analytics                              │
-│ ┌────────┐                        ┌────────┐             │
-│ │Type    │───────────────────────▶│Get     │             │
-│ │question│    AI handles          │instant │             │
-│ │in chat │    everything          │answer  │             │
-│ └────────┘                        └────────┘             │
-│                  Time: 5 seconds                         │
+│ AFTER: Condominium Analytics                               │
+│ ┌────────┐                        ┌────────┐               │
+│ │Type    │───────────────────────▶│Get     │               │
+│ │question│    AI handles          │instant │               │
+│ │in chat │    everything          │answer  │               │
+│ └────────┘                        └────────┘               │
+│                  Time: 5 seconds                           │
 └────────────────────────────────────────────────────────────┘
 ```
 
@@ -88,16 +88,16 @@ PHASE 2: USER INTERACTION (Real-time)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                   TRADITIONAL vs SMART                     │
+│                   TRADITIONAL vs SMART                      │
 ├─────────────────────────────────────────────────────────────┤
 │ TRADITIONAL METHOD        │  CONDOMINIUM ANALYTICS          │
-│                          │                                 │
-│ • Search through files   │  • Ask in plain language       │
-│ • Read multiple pages    │  • AI finds exact info         │
-│ • Manual calculations    │  • Instant calculations        │
-│ • 15-30 minutes         │  • 5 seconds                   │
-│ • Prone to errors       │  • Accurate results            │
-│ • Need computer access   │  • Works on any device         │
+│                           │                                 │
+│ • Search through files    │  • Ask in plain language        │
+│ • Read multiple pages     │  • AI finds exact info          │
+│ • Manual calculations     │  • Instant calculations         │
+│ • 15-30 minutes           │  • 5 seconds                    │
+│ • Prone to errors         │  • Accurate results             │
+│ • Need computer access    │  • Works on any device          │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -117,7 +117,7 @@ Step 2: AI Understanding
 ┌─────────────────────────────────────┐
 │ Claude AI processes:                │
 │ • Identifies: "power" = utilities   │
-│ • Time period: "January 2025"      │
+│ • Time period: "January 2025"       │
 │ • Action: "spend" = expense query   │
 └─────────────────────────────────────┘
                     ↓
@@ -132,8 +132,8 @@ Step 3: Smart Search
 Step 4: Result
 ┌─────────────────────────────────────┐
 │ "Power expenses for January 2025:   │
-│ R$ 2,450.30 paid to CEMIG on       │
-│ 15/01/2025"                        │
+│ R$ 2,450.30 paid to CEMIG on        │
+│ 15/01/2025"                         │
 └─────────────────────────────────────┘
 ```
 
@@ -170,20 +170,20 @@ Title: "Condominium Analytics - Technical Architecture"
 │                  CONDOMINIUM ANALYTICS AT A GLANCE                 │
 │                                                                    │
 │  INPUT              PROCESSING           OUTPUT                    │
-│  ┌─────────┐       ┌─────────┐         ┌─────────┐               │
-│  │ Monthly │  ───▶ │   AI    │  ───▶   │ Instant │               │
-│  │ Reports │       │ System  │         │Answers  │               │
-│  │         │       │         │         │         │               │
-│  │6 months │       │603 docs │         │< 5 sec  │               │
-│  │of data  │       │indexed  │         │response │               │
-│  └─────────┘       └─────────┘         └─────────┘               │
+│  ┌─────────┐       ┌─────────┐         ┌─────────┐                 │
+│  │ Monthly │  ───▶ │   AI    │  ───▶   │ Instant │                 │
+│  │ Reports │       │ System  │         │Answers  │                 │
+│  │         │       │         │         │         │                 │
+│  │6 months │       │603 docs │         │< 5 sec  │                 │
+│  │of data  │       │indexed  │         │response │                 │
+│  └─────────┘       └─────────┘         └─────────┘                 │
 │                                                                    │
-│  EXAMPLES OF QUESTIONS:                                           │
-│  • "How much for utilities in January?"                          │
-│  • "What did we pay for elevator maintenance?"                   │
-│  • "Show total expenses for February 2025"                       │
+│  EXAMPLES OF QUESTIONS:                                            │
+│  • "How much for utilities in January?"                            │
+│  • "What did we pay for elevator maintenance?"                     │
+│  • "Show total expenses for February 2025"                         │
 │                                                                    │
-│  TRY IT: https://condominium-analytics-xxztp26via-uc.a.run.app/  │
+│  TRY IT: https://condominium-analytics-xxztp26via-uc.a.run.app/    │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
